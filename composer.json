@@ -1,10 +1,13 @@
 {
-    "name": "phpjuice/paypal-checkout-sdk",
-    "description": "PayPal's PHP SDK for Checkout REST APIs",
+    "name": "phpjuice/payment-checkout-sdk",
+    "description": "Multi-provider PHP SDK for Payment Checkout APIs (PayPal & Stripe)",
     "keywords": [
         "phpjuice",
         "paypal",
-        "checkout"
+        "stripe",
+        "payment",
+        "checkout",
+        "multi-provider"
     ],
     "homepage": "https://phpjuice.gitbook.io/paypal-checkout-sdk",
     "license": "MIT",
