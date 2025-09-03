@@ -175,7 +175,9 @@ class Order implements Arrayable, ArrayAccess, Jsonable
         return [
             'intent' => $this->intent,
             'purchase_units' => array_map(
-                fn (PurchaseUnit $purchase_unit) => $purchase_unit->toArray(),
+                function (PurchaseUnit $purchase_unit) {
+                    return $purchase_unit->toArray();
+                },
                 $this->purchase_units
             ),
             'application_context' => $this->application_context ? $this->application_context->toArray() : null,

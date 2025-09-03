@@ -94,7 +94,9 @@ class PurchaseUnit implements Arrayable, Jsonable
         return [
             'amount' => $this->amount->toArray(),
             'items' => array_map(
-                fn (Item $item) => $item->toArray(),
+                function (Item $item) {
+                    return $item->toArray();
+                },
                 $this->items
             ),
         ];
