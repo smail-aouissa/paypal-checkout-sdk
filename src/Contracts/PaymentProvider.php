@@ -3,6 +3,7 @@
 namespace PayPal\Checkout\Contracts;
 
 use PayPal\Checkout\Orders\Order;
+use PayPal\Checkout\Refunds\RefundRequest;
 use Psr\Http\Message\ResponseInterface;
 
 interface PaymentProvider
@@ -14,4 +15,6 @@ interface PaymentProvider
     public function captureOrder(string $orderId): ResponseInterface;
     
     public function authorizeOrder(string $orderId): ResponseInterface;
+    
+    public function refundPayment(string $paymentId, RefundRequest $refundRequest): ResponseInterface;
 }

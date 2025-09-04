@@ -7,6 +7,7 @@ use PayPal\Checkout\Contracts\PaymentProvider;
 use PayPal\Checkout\Environment\StripeEnvironment;
 use PayPal\Checkout\Http\StripeClient;
 use PayPal\Checkout\Orders\Order;
+use PayPal\Checkout\Refunds\RefundRequest;
 use Psr\Http\Message\ResponseInterface;
 
 class StripeAdapter implements PaymentProvider
@@ -86,5 +87,52 @@ class StripeAdapter implements PaymentProvider
     protected function convertToStripeCents(string $amount): int
     {
         return (int) round(floatval($amount) * 100);
+    }
+
+    public function refundPayment(string $paymentId, RefundRequest $refundRequest): ResponseInterface
+    {
+        $refundData = $this->transformRefundForStripe($paymentId, $refundRequest);
+        
+        $request = new Request(
+            'POST',
+            '/v1/refunds',
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+            http_build_query($refundData)
+        );
+        
+        return $this->client->send($request);
+    }
+
+    protected function transformRefundForStripe(string $paymentId, RefundRequest $refundRequest): array
+    {
+        $data = [
+            'payment_intent' => $paymentId,
+        ];
+
+        $amount = $refundRequest->getAmount();
+        if ($amount) {
+            $data['amount'] = $this->convertToStripeCents($amount->getValue());
+        }
+
+        $reason = $refundRequest->getReason();
+        if ($reason) {
+            $data['reason'] = $reason;
+        }
+
+        $metadata = [];
+        if ($refundRequest->getInvoiceId()) {
+            $metadata['invoice_id'] = $refundRequest->getInvoiceId();
+        }
+        if ($refundRequest->getNoteToPayer()) {
+            $metadata['note_to_payer'] = $refundRequest->getNoteToPayer();
+        }
+        
+        if (!empty($metadata)) {
+            foreach ($metadata as $key => $value) {
+                $data["metadata[{$key}]"] = $value;
+            }
+        }
+
+        return $data;
     }
 }
