@@ -28,8 +28,7 @@ class PayPalAdapter implements PaymentProvider
 
     public function createOrder(Order $order): ResponseInterface
     {
-        $request = new OrderCreateRequest();
-        $request->body = $order->toArray();
+        $request = new OrderCreateRequest($order);
 
         return $this->client->send($request);
     }

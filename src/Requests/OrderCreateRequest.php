@@ -15,7 +15,12 @@ class OrderCreateRequest extends PaypalRequest
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
         ];
-        $body = Utils::streamFor((string) $order);
+        
+        $body = null;
+        if ($order) {
+            $body = Utils::streamFor($order->toJson());
+        }
+        
         parent::__construct('POST', '/v2/checkout/orders', $headers, $body);
     }
 }

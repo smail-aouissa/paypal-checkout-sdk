@@ -21,7 +21,7 @@ class PurchaseUnit implements Arrayable, Jsonable
      * such as the total item Amount, total tax Amount, shipping, handling, insurance,
      * and discounts, if any.
      */
-    protected AmountBreakdown $amount;
+    protected $amount;
 
     /**
      * An array of items that the customer purchases from the merchant.
@@ -31,11 +31,51 @@ class PurchaseUnit implements Arrayable, Jsonable
     protected array $items = [];
 
     /**
+     * The API caller-provided external invoice number for this order.
+     * Appears in both the payer's transaction history and the emails that the payer receives.
+     */
+    protected ?string $reference_id = null;
+
+    /**
      * Create a new collection.
      */
-    public function __construct(AmountBreakdown $amount)
+    public function __construct($amount = null)
     {
-        $this->amount = $amount;
+        if ($amount) {
+            $this->setAmount($amount);
+        }
+    }
+
+    /**
+     * Set the amount for this purchase unit.
+     */
+    public function setAmount($amount): self
+    {
+        if ($amount instanceof Amount || $amount instanceof AmountBreakdown) {
+            $this->amount = $amount;
+        } else {
+            throw new \InvalidArgumentException('Amount must be an instance of Amount or AmountBreakdown');
+        }
+        
+        return $this;
+    }
+
+    /**
+     * Set the reference ID for this purchase unit.
+     */
+    public function setReferenceId(string $referenceId): self
+    {
+        $this->reference_id = $referenceId;
+        
+        return $this;
+    }
+
+    /**
+     * Get the reference ID for this purchase unit.
+     */
+    public function getReferenceId(): ?string
+    {
+        return $this->reference_id;
     }
 
     /**
@@ -79,9 +119,9 @@ class PurchaseUnit implements Arrayable, Jsonable
     }
 
     /**
-     * return's the purchase unit amount breakdown.
+     * return's the purchase unit amount.
      */
-    public function getAmount(): AmountBreakdown
+    public function getAmount()
     {
         return $this->amount;
     }
@@ -91,14 +131,25 @@ class PurchaseUnit implements Arrayable, Jsonable
      */
     public function toArray(): array
     {
-        return [
-            'amount' => $this->amount->toArray(),
-            'items' => array_map(
+        $data = [
+            'amount' => $this->amount ? $this->amount->toArray() : null,
+        ];
+
+        if (!empty($this->items)) {
+            $data['items'] = array_map(
                 function (Item $item) {
                     return $item->toArray();
                 },
                 $this->items
-            ),
-        ];
+            );
+        }
+
+        if ($this->reference_id) {
+            $data['reference_id'] = $this->reference_id;
+        }
+
+        return array_filter($data, function($value) {
+            return $value !== null;
+        });
     }
 }

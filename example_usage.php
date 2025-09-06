@@ -30,28 +30,28 @@ try {
         'client_id' => $credentials['paypal_client_id'],
         'client_secret' => $credentials['paypal_client_secret']
     ]);
-    
+
     // Create order
     $order = new Order();
     $order->setIntent('CAPTURE');
-    
+
     // Add purchase unit
     $purchaseUnit = new PurchaseUnit();
-    $purchaseUnit->setAmount(new Amount('USD', '100.00'));
+    $purchaseUnit->setAmount(new Amount('100.00','USD' ));
     $purchaseUnit->setReferenceId('order-' . uniqid());
-    
+
     $order->addPurchaseUnit($purchaseUnit);
-    
+
     // Create payment
     echo "Creating PayPal order for $100.00 USD...\n";
     $response = $paypalProvider->createOrder($order);
     $responseData = json_decode($response->getBody(), true);
-    
+
     if ($response->getStatusCode() === 201) {
         echo "✓ PayPal order created successfully!\n";
         echo "  Order ID: " . $responseData['id'] . "\n";
         echo "  Status: " . $responseData['status'] . "\n";
-        
+
         // Find approval URL for customer
         foreach ($responseData['links'] as $link) {
             if ($link['rel'] === 'approve') {
@@ -59,20 +59,20 @@ try {
                 break;
             }
         }
-        
+
         // Get order details
         $orderId = $responseData['id'];
         $detailsResponse = $paypalProvider->showOrder($orderId);
         $detailsData = json_decode($detailsResponse->getBody(), true);
-        
+
         echo "  Order Details Retrieved: " . $detailsData['status'] . "\n";
-        
+
     } else {
         echo "✗ PayPal order creation failed\n";
         echo "  Status: " . $response->getStatusCode() . "\n";
         echo "  Response: " . $response->getBody() . "\n";
     }
-    
+
 } catch (Exception $e) {
     echo "✗ PayPal Error: " . $e->getMessage() . "\n";
 }
@@ -89,43 +89,43 @@ try {
         'secret_key' => $credentials['stripe_secret_key'],
         'publishable_key' => $credentials['stripe_publishable_key']
     ]);
-    
+
     // Create order (same structure as PayPal!)
     $order = new Order();
     $order->setIntent('CAPTURE');
-    
+
     // Add purchase unit
     $purchaseUnit = new PurchaseUnit();
-    $purchaseUnit->setAmount(new Amount('USD', '100.00'));
+    $purchaseUnit->setAmount(new Amount('100.00','USD' ));
     $purchaseUnit->setReferenceId('order-' . uniqid());
-    
+
     $order->addPurchaseUnit($purchaseUnit);
-    
+
     // Create payment intent
     echo "Creating Stripe payment intent for $100.00 USD...\n";
     $response = $stripeProvider->createOrder($order);
     $responseData = json_decode($response->getBody(), true);
-    
+
     if ($response->getStatusCode() === 200) {
         echo "✓ Stripe payment intent created successfully!\n";
         echo "  Payment Intent ID: " . $responseData['id'] . "\n";
         echo "  Status: " . $responseData['status'] . "\n";
         echo "  Amount: $" . ($responseData['amount'] / 100) . " " . strtoupper($responseData['currency']) . "\n";
         echo "  Client Secret: " . $responseData['client_secret'] . "\n";
-        
+
         // Get payment intent details
         $paymentIntentId = $responseData['id'];
         $detailsResponse = $stripeProvider->showOrder($paymentIntentId);
         $detailsData = json_decode($detailsResponse->getBody(), true);
-        
+
         echo "  Payment Details Retrieved: " . $detailsData['status'] . "\n";
-        
+
     } else {
         echo "✗ Stripe payment intent creation failed\n";
         echo "  Status: " . $response->getStatusCode() . "\n";
         echo "  Response: " . $response->getBody() . "\n";
     }
-    
+
 } catch (Exception $e) {
     echo "✗ Stripe Error: " . $e->getMessage() . "\n";
 }
@@ -138,9 +138,9 @@ echo "-------------------------------------\n";
 
 function createPayment($provider, $amount, $currency = 'USD') {
     global $credentials, $environment;
-    
+
     echo "Creating payment using {$provider} for {$amount} {$currency}...\n";
-    
+
     try {
         // Select configuration based on provider
         $config = [];
@@ -160,24 +160,24 @@ function createPayment($provider, $amount, $currency = 'USD') {
             default:
                 throw new Exception("Unsupported provider: {$provider}");
         }
-        
+
         // Create provider
         $paymentProvider = PaymentProviderFactory::create($provider, $environment, $config);
-        
+
         // Create order (same for both providers!)
         $order = new Order();
         $order->setIntent('CAPTURE');
-        
+
         $purchaseUnit = new PurchaseUnit();
-        $purchaseUnit->setAmount(new Amount($currency, $amount));
+        $purchaseUnit->setAmount(new Amount($amount,$currency));
         $purchaseUnit->setReferenceId('dynamic-order-' . uniqid());
-        
+
         $order->addPurchaseUnit($purchaseUnit);
-        
+
         // Create payment
         $response = $paymentProvider->createOrder($order);
         $responseData = json_decode($response->getBody(), true);
-        
+
         if ($response->getStatusCode() === 200 || $response->getStatusCode() === 201) {
             echo "✓ {$provider} payment created: " . $responseData['id'] . "\n";
             return $responseData['id'];
@@ -185,7 +185,7 @@ function createPayment($provider, $amount, $currency = 'USD') {
             echo "✗ {$provider} payment failed: " . $response->getStatusCode() . "\n";
             return null;
         }
-        
+
     } catch (Exception $e) {
         echo "✗ {$provider} error: " . $e->getMessage() . "\n";
         return null;
@@ -210,16 +210,16 @@ try {
         'client_secret' => 'invalid_secret'
     ]);
     echo "✓ Provider created (will fail on API call)\n";
-    
+
     $order = new Order();
     $order->setIntent('CAPTURE');
     $purchaseUnit = new PurchaseUnit();
     $purchaseUnit->setAmount(new Amount('USD', '10.00'));
     $order->addPurchaseUnit($purchaseUnit);
-    
+
     $response = $invalidProvider->createOrder($order);
     echo "Unexpected success\n";
-    
+
 } catch (Exception $e) {
     echo "✓ Expected error caught: " . $e->getMessage() . "\n";
 }
