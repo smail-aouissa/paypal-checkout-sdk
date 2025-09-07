@@ -1,5 +1,5 @@
 {
-    "name": "phpjuice/payment-checkout-sdk",
+    "name": "smail-aouissa/payment-checkout-sdk",
     "description": "Multi-provider PHP SDK for Payment Checkout APIs (PayPal & Stripe)",
     "keywords": [
         "phpjuice",
