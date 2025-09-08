@@ -54,9 +54,21 @@ class StripeAdapter implements PaymentProvider
         return $this->client->send($request);
     }
 
-    public function authorizeOrder(string $orderId): ResponseInterface
+     public function authorizeOrder(string $orderId, ?array $params=[]): ResponseInterface
     {
-        return $this->showOrder($orderId);
+        $body = http_build_query([
+            'payment_method' => $params['payment_method'],
+            'return_url' => $params['return_url'],
+        ]);
+
+        $request = new Request(
+            'POST',
+            "/v1/payment_intents/{$orderId}/confirm",
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+            $body
+        );
+
+        return $this->client->send($request);
     }
 
     protected function transformOrderForStripe(Order $order): array
