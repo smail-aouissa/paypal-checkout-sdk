@@ -1,4 +1,4 @@
-# PayPal Checkout SDK
+# Multi-Provider Payment SDK (PayPal & Stripe)
 
 ![Tests](https://github.com/phpjuice/paypal-checkout-sdk/workflows/Tests/badge.svg?branch=main)
 [![Latest Stable Version](http://poser.pugx.org/phpjuice/paypal-checkout-sdk/v)](https://packagist.org/packages/phpjuice/paypal-checkout-sdk)
@@ -6,10 +6,15 @@
 [![Total Downloads](http://poser.pugx.org/phpjuice/paypal-checkout-sdk/downloads)](https://packagist.org/packages/phpjuice/paypal-checkout-sdk)
 [![License](http://poser.pugx.org/phpjuice/paypal-checkout-sdk/license)](https://packagist.org/packages/phpjuice/paypal-checkout-sdk)
 
-This Package is a PHP SDK wrapper around version 2 of the PayPal rest API. It provides a simple, fluent API to create
-and capture orders with both sandbox and production environments supported.
+This package is an enhanced multi-provider payment SDK that supports both PayPal and Stripe payment processing through a unified interface. It provides a simple, fluent API to create, capture, and refund payments with both sandbox and production environments supported.
 
-To learn all about it, head over to the extensive [documentation](https://phpjuice.gitbook.io/paypal-checkout-sdk).
+**Features:**
+- ✅ Unified interface for PayPal and Stripe payments
+- ✅ Complete refund functionality for both providers
+- ✅ Order creation and capture
+- ✅ Sandbox and production environment support
+- ✅ Comprehensive error handling
+- ✅ Full working examples included
 
 ## Installation
 
@@ -23,116 +28,165 @@ The supported way of installing PayPal Checkout SDK package is via Composer.
 composer require phpjuice/paypal-checkout-sdk
 ```
 
+## Quick Start Examples
+
+This SDK includes comprehensive working examples to get you started quickly:
+
+### Available Example Files
+
+- **`example_usage.php`** - Basic usage examples for both PayPal and Stripe
+- **`corrected_test.php`** - Corrected PayPal implementation example  
+- **`working_example_with_refunds.php`** - Complete example with refund functionality
+- **`example_refund_usage.php`** - Dedicated refund examples and advanced usage
+
+### Running the Examples
+
+1. Replace credential placeholders with your actual API keys in any example file
+2. Run: `php example_usage.php` (or any other example file)
+3. Follow the output instructions for completing payments
+
 ## Setup
 
-PayPal Checkout SDK is designed to simplify using the new PayPal checkout api in your app.
+### Credentials Setup
 
-### Setup Credentials
+#### PayPal Credentials
+Get client ID and client secret from [PayPal Developer Console](https://developer.paypal.com/developer/applications):
+- Create a new REST API app
+- Copy Client ID and Client Secret
 
-Get client ID and client secret by going
-to [https://developer.paypal.com/developer/applications](https://developer.paypal.com/developer/applications) and
-generating a REST API app. Get Client ID and Secret from there.
+#### Stripe Credentials  
+Get API keys from [Stripe Dashboard](https://dashboard.stripe.com/apikeys):
+- Copy Secret Key (starts with `sk_`)
+- Copy Publishable Key (starts with `pk_`)
 
-### Setup a Paypal Client
-
-Inorder to communicate with PayPal platform we need to set up a client first :
-
-#### Create a client with sandbox environment :
-
-```php
-// import namespace
-use PayPal\Http\Environment\SandboxEnvironment;
-use PayPal\Http\PayPalClient;
-
-// client id and client secret retrieved from PayPal
-$clientId = "<<PAYPAL-CLIENT-ID>>";
-$clientSecret = "<<PAYPAL-CLIENT-SECRET>>";
-
-// create a new sandbox environment
-$environment = new SandboxEnvironment($clientId, $clientSecret);
-
-// create a new client
-$client = new PayPalClient($environment);
-```
-
-#### Create a client with production environment :
+### Basic Provider Setup
 
 ```php
-// import namespace
-use PayPal\Http\Environment\ProductionEnvironment;
-use PayPal\Http\PayPalClient;
+use PayPal\Checkout\Factory\PaymentProviderFactory;
 
-// client id and client secret retrieved from PayPal
-$clientId = "<<PAYPAL-CLIENT-ID>>";
-$clientSecret = "<<PAYPAL-CLIENT-SECRET>>";
+// PayPal Provider
+$paypalProvider = PaymentProviderFactory::create('paypal', 'sandbox', [
+    'client_id' => 'your_paypal_client_id',
+    'client_secret' => 'your_paypal_client_secret'
+]);
 
-// create a new sandbox environment
-$environment = new ProductionEnvironment($clientId, $clientSecret);
-
-// create a new client
-$client = new PayPalClient($environment);
+// Stripe Provider  
+$stripeProvider = PaymentProviderFactory::create('stripe', 'sandbox', [
+    'secret_key' => 'sk_test_your_stripe_secret_key',
+    'publishable_key' => 'pk_test_your_stripe_publishable_key'
+]);
 ```
-
-> **INFO**: head over to the extensive [documentation](https://phpjuice.gitbook.io/paypal-checkout-sdk).
 
 ## Usage
 
-### Create an Order
+### Creating Orders (Unified Interface)
+
+The same code works for both PayPal and Stripe providers:
 
 ```php
-// Import namespace
-use PayPal\Checkout\Requests\OrderCreateRequest;
-use PayPal\Checkout\Orders\AmountBreakdown;
-use PayPal\Checkout\Orders\Item;
 use PayPal\Checkout\Orders\Order;
 use PayPal\Checkout\Orders\PurchaseUnit;
+use PayPal\Checkout\Orders\Amount;
 
-// Create a purchase unit with the total amount
-$purchase_unit = new PurchaseUnit(AmountBreakdown::of('100.00'));
-
-// Create & add item to purchase unit
-$purchase_unit->addItem(Item::create('Item 1', '100.00', 'USD', 1));
-
-// Create a new order with intent to capture a payment
+// Create order (same for both providers)
 $order = new Order();
+$order->setIntent('CAPTURE');
 
-// Add a purchase unit to order
-$order->addPurchaseUnit($purchase_unit);
+// Create purchase unit
+$purchaseUnit = new PurchaseUnit();
+$purchaseUnit->setAmount(new Amount('100.00', 'USD'));
+$purchaseUnit->setReferenceId('order-' . time());
 
-// Create an order create http request
-$request = new OrderCreateRequest($order);
+$order->addPurchaseUnit($purchaseUnit);
 
-// Send request to PayPal
-$response = $client->send($request);
+// Create payment with either provider
+$response = $paymentProvider->createOrder($order);
+$responseData = json_decode($response->getBody(), true);
 
-// Parse result
-$result = json_decode((string) $response->getBody());
-echo $result->id; // id of the created order
-echo $result->intent; // CAPTURE
-echo $result->status; // CREATED
+echo "Payment ID: " . $responseData['id'];
 ```
 
-> **INFO**: head over to the extensive [documentation](https://phpjuice.gitbook.io/paypal-checkout-sdk).
-
-### Capture an Order
+### PayPal-Specific Usage
 
 ```php
-// Import namespace
-use PayPal\Checkout\Requests\OrderCaptureRequest;
-
-// Create an order capture http request
-$request = new OrderCaptureRequest($order_id);
-
-// Send request to PayPal
-$response = $client->send($request);
-
-// Parse result
-$result = json_decode((string) $response->getBody());
-echo $result->id; // id of the captured order
-echo $result->status; // CAPTURED
+// PayPal returns approval URL for customer
+foreach ($responseData['links'] as $link) {
+    if ($link['rel'] === 'approve') {
+        echo "Customer Approval URL: " . $link['href'];
+        break;
+    }
+}
 ```
 
-> **INFO**: head over to the extensive [documentation](https://phpjuice.gitbook.io/paypal-checkout-sdk).
+### Stripe-Specific Usage  
+
+```php
+// Stripe returns client_secret for frontend integration
+echo "Client Secret: " . $responseData['client_secret'];
+```
+
+### Refund Processing
+
+Both providers support full and partial refunds through a unified interface:
+
+```php
+use PayPal\Checkout\Refunds\RefundRequest;
+
+// Create refund request
+$refundRequest = new RefundRequest('25.00', 'USD'); // Partial refund
+$refundRequest->setInvoiceId('refund-' . time())
+             ->setNoteToPayer('Refund processed as requested')
+             ->setReason('requested_by_customer');
+
+// Process refund (works with both PayPal capture IDs and Stripe payment intent IDs)
+$refundResponse = $paymentProvider->refundPayment($paymentId, $refundRequest);
+```
+
+### Order Details
+
+Retrieve order/payment details:
+
+```php
+// Get order details (works for both providers)
+$detailsResponse = $paymentProvider->showOrder($orderId);
+$details = json_decode($detailsResponse->getBody(), true);
+```
+
+## Example Files Overview
+
+### `example_usage.php`
+Complete basic usage examples demonstrating:
+- PayPal and Stripe payment creation
+- Order details retrieval  
+- Dynamic provider selection
+- Error handling patterns
+
+### `corrected_test.php`
+Focused PayPal example showing:
+- Proper PayPal order structure
+- JSON output for debugging
+- Comprehensive error handling
+- Working PayPal implementation
+
+### `working_example_with_refunds.php`
+Comprehensive example featuring:
+- Multi-provider payment creation (PayPal & Stripe)
+- Complete refund functionality for both providers
+- Refund request creation and processing
+- Summary of all implemented features
+
+### `example_refund_usage.php`
+Dedicated refund examples including:
+- Full and partial refund processing
+- Advanced refund request configuration
+- Multi-provider refund testing
+- Production-ready refund patterns
+
+### Getting Started
+1. Choose the example file that best matches your needs
+2. Replace credential placeholders with your actual API keys
+3. Run: `php filename.php`
+4. Follow console output for next steps
 
 ## Changelog
 
@@ -148,16 +202,10 @@ If you discover any security related issues, please email author instead of usin
 
 ## Credits
 
-- [PayPal Docs](https://developer.paypal.com/docs/)
-- [Gitbook](https://www.gitbook.com/)
+- [PayPal Developer Documentation](https://developer.paypal.com/docs/)
+- [Stripe API Documentation](https://stripe.com/docs/api)
+- [Original PayPal SDK](https://github.com/phpjuice/paypal-checkout-sdk)
 
 ## License
 
-license. Please see the [Licence](https://github.com/phpjuice/paypal-checkout-sdk/blob/main/LICENSE) for more
-information.
-
-![Tests](https://github.com/phpjuice/paypal-checkout-sdk/workflows/Tests/badge.svg?branch=main)
-[![Latest Stable Version](http://poser.pugx.org/phpjuice/paypal-checkout-sdk/v)](https://packagist.org/packages/phpjuice/paypal-checkout-sdk)
-[![Maintainability](https://api.codeclimate.com/v1/badges/e600bc7ccce319ffe7c7/maintainability)](https://codeclimate.com/github/phpjuice/paypal-checkout-sdk/maintainability)
-[![Total Downloads](http://poser.pugx.org/phpjuice/paypal-checkout-sdk/downloads)](https://packagist.org/packages/phpjuice/paypal-checkout-sdk)
-[![License](http://poser.pugx.org/phpjuice/paypal-checkout-sdk/license)](https://packagist.org/packages/phpjuice/paypal-checkout-sdk)
+Please see the [LICENSE](https://github.com/phpjuice/paypal-checkout-sdk/blob/main/LICENSE) file for more information.
