@@ -10,6 +10,7 @@ use PayPal\Checkout\Refunds\RefundRequest;
 use PayPal\Checkout\Requests\OrderAuthorizeRequest;
 use PayPal\Checkout\Requests\CaptureAuthorizeRequest;
 use PayPal\Checkout\Requests\OrderCaptureRequest;
+use PayPal\Checkout\Requests\CancelAuthorizeRequest;
 use PayPal\Checkout\Requests\OrderCreateRequest;
 use PayPal\Checkout\Requests\OrderShowRequest;
 use PayPal\Checkout\Requests\OrderRefundRequest;
@@ -58,6 +59,13 @@ class PayPalAdapter implements PaymentProvider
     public function captureAuthorizeOrder(string $authorizeId): ResponseInterface
     {
         $request = new CaptureAuthorizeRequest($authorizeId);
+
+        return $this->client->send($request);
+    }
+
+    public function cancelAuthorizeOrder(string $authorizeId)
+    {
+        $request = new CancelAuthorizeRequest($authorizeId);
 
         return $this->client->send($request);
     }
