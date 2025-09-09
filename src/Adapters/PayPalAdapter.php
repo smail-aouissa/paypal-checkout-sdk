@@ -13,7 +13,7 @@ use PayPal\Checkout\Requests\OrderCaptureRequest;
 use PayPal\Checkout\Requests\CancelAuthorizeRequest;
 use PayPal\Checkout\Requests\OrderCreateRequest;
 use PayPal\Checkout\Requests\OrderShowRequest;
-use PayPal\Checkout\Requests\OrderRefundRequest;
+use PayPal\Checkout\Requests\PayPalRefundRequest;
 use Psr\Http\Message\ResponseInterface;
 
 class PayPalAdapter implements PaymentProvider
@@ -73,7 +73,7 @@ class PayPalAdapter implements PaymentProvider
 
     public function refundPayment(string $paymentId, RefundRequest $refundRequest): ResponseInterface
     {
-        $request = new OrderRefundRequest($paymentId, $refundRequest);
+        $request = new PayPalRefundRequest($paymentId, $refundRequest);
 
         return $this->client->send($request);
     }
