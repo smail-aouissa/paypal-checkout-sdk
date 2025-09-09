@@ -6,7 +6,7 @@ use GuzzleHttp\Psr7\Utils;
 use PayPal\Checkout\Refunds\RefundRequest;
 use PayPal\Http\PaypalRequest;
 
-class OrderRefundRequest extends PaypalRequest
+class PayPalRefundRequest extends PaypalRequest
 {
     public function __construct(string $captureId, RefundRequest $refundRequest)
     {
