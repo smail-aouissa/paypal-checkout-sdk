@@ -159,4 +159,15 @@ class StripeAdapter implements PaymentProvider
 
         return $data;
     }
+
+    public function cancelAuthorizeOrder($orderId)
+    {
+        $request = new Request(
+            'POST',
+            "/v1/payment_intents/{$orderId}/cancel",
+            ['Content-Type' => 'application/x-www-form-urlencoded'],
+        );
+
+        return $this->client->send($request);
+    }
 }
