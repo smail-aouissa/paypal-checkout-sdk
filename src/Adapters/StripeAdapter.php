@@ -39,9 +39,21 @@ class StripeAdapter implements PaymentProvider
     public function showOrder(string $orderId): ResponseInterface
     {
         $request = new Request('GET', "/v1/payment_intents/{$orderId}");
-        
+
         return $this->client->send($request);
     }
+
+    public function showRefund(string $orderId): ResponseInterface
+    {
+        $params = http_build_query([
+            'payment_intent' => $orderId,
+        ]);
+
+        $request = new Request('GET', "/v1/charges?{$params}");
+
+        return $this->client->send($request);
+    }
+
 
     public function captureOrder(string $orderId): ResponseInterface
     {
