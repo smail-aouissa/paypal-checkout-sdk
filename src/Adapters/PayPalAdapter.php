@@ -42,6 +42,14 @@ class PayPalAdapter implements PaymentProvider
         return $this->client->send($request);
     }
 
+    public function showRefund(string $orderId): ResponseInterface
+    {
+        $request = new OrderShowRequest($orderId);
+
+        return $this->client->send($request);
+    }
+
+
     public function captureOrder(string $orderId): ResponseInterface
     {
         $request = new OrderCaptureRequest($orderId);
